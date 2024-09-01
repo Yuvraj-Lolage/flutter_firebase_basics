@@ -2,6 +2,8 @@ import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -44,6 +46,40 @@ class _LoginState extends State<Login> {
     }
   }
 
+  void signInWithGoogle() async {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+
+    try {
+      final GoogleSignInAccount? googleSignInAccount =
+          await googleSignIn.signIn();
+
+      if (googleSignInAccount != null) {
+        final GoogleSignInAuthentication googleSignInAuthentication =
+            await googleSignInAccount.authentication;
+
+        final AuthCredential authCredential = GoogleAuthProvider.credential(
+            idToken: googleSignInAuthentication.idToken,
+            accessToken: googleSignInAuthentication.accessToken);
+
+        await FirebaseAuth.instance.signInWithCredential(authCredential);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.all(10),
+            backgroundColor: Colors.green,
+            content: Text(
+              'Login successfull',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            )));
+
+        Navigator.popUntil(context, (route) => route.isFirst);
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,7 +92,7 @@ class _LoginState extends State<Login> {
         centerTitle: true,
         backgroundColor: Colors.teal[400],
       ),
-      body: SafeArea(
+      body: Center(
           child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -82,14 +118,15 @@ class _LoginState extends State<Login> {
                 ),
                 SizedBox(
                   height: 50,
-                  width: 150,
-                  child: ElevatedButton(
+                  width: double.infinity,
+                  child: TextButton(
                       onPressed: () {
                         login();
                       },
-                      style: ButtonStyle(
-                          backgroundColor:
-                              WidgetStateProperty.all(Colors.teal[100])),
+                      style: TextButton.styleFrom(
+                          backgroundColor: Colors.teal[100],
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0))),
                       child: const Text(
                         'Login',
                         style: TextStyle(
@@ -97,6 +134,59 @@ class _LoginState extends State<Login> {
                             fontWeight: FontWeight.bold,
                             fontSize: 20),
                       )),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                Text(
+                  '- OR -',
+                  style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15),
+                ),
+                SizedBox(
+                  height: 5,
+                ),
+                Text(
+                  'Sign in with',
+                  style: TextStyle(
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12),
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                Container(
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                      child: GestureDetector(
+                    onTap: () {
+                      signInWithGoogle();
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(
+                          FontAwesomeIcons.google,
+                          color: Colors.white,
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text(
+                          'Sign in with Google',
+                          style: TextStyle(color: Colors.white),
+                        )
+                      ],
+                    ),
+                  )),
                 ),
                 const SizedBox(
                   height: 20,
